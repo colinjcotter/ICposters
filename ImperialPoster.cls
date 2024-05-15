@@ -49,8 +49,8 @@
 	\changefontsize[32.5pt]{26pt} % Change the default font size and baselineskip for A1 paper size
 	\setlength{\parskip}{32.5pt} % Vertical space between paragraphs
 }{ % Otherwise default to A0 paper size settings
-	\changefontsize[48pt]{36pt} % Change the default font size and baselineskip for A0 paper size
-	\setlength{\parskip}{48pt} % Vertical space between paragraphs
+	\changefontsize[36pt]{24pt} % Change the default font size and baselineskip for A0 paper size
+	\setlength{\parskip}{36pt} % Vertical space between paragraphs
 }
 
 \setlength{\parindent}{0pt} % Paragraph indentation
