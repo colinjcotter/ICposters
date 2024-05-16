@@ -47,10 +47,13 @@
 %----------------------------------------------------------------------------------------
 
 \usepackage{biblatex}
+\usepackage{amsfonts,amsopn,amsmath}
 \usepackage{setspace}
 \setlength{\bibitemsep}{0pt}
 \addbibresource{poster.bib}
-
+\DeclareMathOperator{\sat}{sat}
+\newcommand{\pp}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\DD}[2]{\frac{D #1}{D #2}} 
 
 \begin{document}
 
@@ -95,11 +98,14 @@
 
   \subsection{ASM} The mesh is decomposed
   into overlapping patches, and the fully coupled Jacobian is solved
-  independently (and hence parallelisably) on each patch. The result of the
-  smoother is the sum of the solutions over all of the patches. In
-  this work, a ``vertex star'' patch is used: it includes all of the
-  degrees of freedom in the cells sharing one vertex, excluding those
-  associated to the boundary (see Figure 1).
+  independently (and hence parallelisably) on each patch. The result
+  of the smoother is the sum of the solutions over all of the
+  patches. In this work, a ``vertex star'' patch is used: it includes
+  all of the degrees of freedom in the cells sharing one vertex,
+  excluding those associated to the boundary (see Figure 1). For
+  3D/vertical slice models, column patches are formed from all the
+  cells sharing a vertex star patch on the horizontal base mesh (see
+  \cite{cotter2023compatible}).
 
   \subsection{Solver performance: Linearisation about state of rest}
   For the rotating shallow water equations on the sphere linearised
@@ -112,12 +118,12 @@
   triangles is used (3 pressure DOFs and 7.5 velocity DOFs per cell), with Crank-Nicholson
   implicit timestepping.
 
-  \vspace{3mm}
-  \begin{multicols}{2} 
-    \includegraphics[width=10cm]{Images/patch}
-\columnbreak
+  \begin{center}
+  \parbox{6.2cm}{
+    \vspace{1cm}
+  \includegraphics[width=6cm]{Images/patch}}
   \begin{tabular}{ccc}
-    Cells & $\Delta t$ & GMRES its/step \\
+    Cells & $\Delta t$ & its/step \\
     \hline
     20480 & 3600s & 8 \\
     81920 & 3600s & 8 \\
@@ -126,9 +132,7 @@
     20480 & 7200s & 8 \\
     20480 & 14400s & 8.6 \\
   \end{tabular} \\
-  \end{multicols}
-  \begin{center}
-      \vspace{-8mm}
+  \vspace{2mm}
   {\bfseries Figure 1}: (LEFT) a diagram showing the ``vertex star'' patch. (RIGHT)
   iteration counts for the monolithic solver applied to the linear
   rotating shallow water equations on the sphere.
@@ -158,24 +162,91 @@ with Crank-Nicholson implicit timestepping.
   
 \columnbreak
 
+\section{Differential variational inequalities for moisture}
+Moisture parameterisations have saturation constraints on tracers that
+are difficult to incorporate into a differential equation formulation.
+This has previously been done by using Heaviside functions, or by
+spreading the impulse over one timestep, as in
+\cite{zerroukat2015moist,rostami2018improved}. Alternatively, we
+can use the framework of differential variational inequalities (VIs). After
+implicit time discretisation, these become nonlinear complementarity problems
+of the form
+\[
+{F}({w}) \geq 0, \quad {w} \geq 0, \quad w_iF(w)_i=0, \, i=1,\ldots,N,
+\]
+for $F:\mathbb{R}^N\to \mathbb{R}^N$, $w\in \mathbb{R}^N$, which can
+be solved using VI-adapted Newton algorithms \cite{bueler2020petsc},
+which just require a suitable Jacobian solver (such as our monolithic
+one).
 
-\cite{cotter2023compatible}
+For water vapour $q_v$ there is a maximum saturation value $q_{\sat}$
+(depending on temperature etc.) so we write $q_v=q_{\sat}+q'$ with
+$q'\leq 0$. This gives the VI formulation,
+\begin{align*}
+\DD{}{t}(q_{\sat}+q') & \leq 0,  \quad
+q' \leq 0, \qquad \left[ \DD{}{t} = \pp{}{t} + u\cdot \nabla\right] \\
+\DD{}{t}(q_{\sat}+q')q' & = 0, \\
+\end{align*}
+i.e. at each point space and time, either the constraint is satisfied,
+or the transport equation holds.
 
-        \columnbreak
+The condensation flux of vapour $q_v$ into cloud $q_c$ is $F$, where
+\[
+\DD{}{t}(q_{\sat}+q') = F, \quad
+\DD{}{t}q_c = -F \implies
+\DD{}{t}q_c = -\DD{}{t}(q_{\sat}+q').
+\]
+\emph{\bfseries The flux $F$ is eliminated and we never need to calculate it.}
+We can also use this to set the latent heat release,
+\[
+\DD{}{t}\theta = -L\DD{}{t}(q_{\sat}+q'),
+\]
+where $\theta$ is potential temperature, and $L$ is a heat release constant.
 
+
+Cloud evaporates back into vapour at rate $\gamma q_v$, provided that
+$q'>0$. Incorporating this gives
+\begin{align*}
+  \DD{}{t}(q_{\sat}+q') - \gamma q_c & \leq 0, \quad
+  q' \leq 0, \\
+  \DD{}{t}q_c + \underbrace{\DD{}{t}(q_{\sat}+q') - \gamma q_c}_{\mbox{condensation}} + \underbrace{\gamma q_c}_{\mbox{evaporation}} & = 0, \\
+  \DD{\theta}{t} + L\left(
+  \underbrace{\DD{}{t}(q_{\sat}+q') - \gamma q_c}_{\mbox{condensation}} + \underbrace{\gamma q_c}_{\mbox{evaporation}}\right) & = 0, \\
+\end{align*}
+Finally we assume a (fixed) maximum cloud value $q_p$, above which
+cloud is converted to rain, $q_r$. This is achieved using another VI
+for $q_c$, leading to the following, completely time continuous,
+coupled system,
+\begin{align*}
+  \DD{u}{t} + fk\times u + b\theta \nabla (D+b) + \frac{D}{2}\nabla \theta
+  & = 0, \\
+  \pp{D}{t} + \nabla\cdot(uD) & = 0, \\
+  \DD{\theta}{t} + L\DD{}{t}(q_{\sat}(D,\theta)+q') & = 0, \\
+  \DD{}{t}(q_{\sat}(D,\theta)+q') - \gamma q_c & \leq 0, \quad q'\leq 0 \\
+  \DD{}{t}q_c + \DD{}{t}(q_{\sat}(D,\theta)+q') & \leq 0, \quad
+  q_c \leq q_p, \\
+  \DD{q_r}{t} + \left(\DD{}{t}q_c + \DD{}{t}(q_{\sat}(D,\theta)+q')\right) & = 0,
+\end{align*}
+where $u$ is the (horizontal) velocity, $f$ is the Coriolis parameter,
+$k$ is the local up direction, $D$ is the layer depth, $b$ is the
+bottom topography, and $g$ is gravitational acceleration. This is a
+completely time continuous system, which can be discretised by
+implicit Runge-Kutta methods with the monolithic approach, treating
+the VI constraints from the DAE perspective \cite{kirby2024extending}.
+
+\columnbreak
         
+\AtNextBibliography{\small}
+\printbibliography
         
-        \AtNextBibliography{\small}
-        \printbibliography
-        
-	\subsection{Affiliations}
-		
-	% Affiliation institutions, the first parameter is the affiliation number (matching the author list) and the second is the institution
-	\affiliationentry{1}{Department of Mathematics, Imperial College London}
+\subsection{Affiliations}
+
+% Affiliation institutions, the first parameter is the affiliation number (matching the author list) and the second is the institution
+\affiliationentry{1}{Department of Mathematics, Imperial College London}
 	
-	\subsection{Funders}
-	
-	\includegraphics[width=0.55\linewidth]{UKRI_logo.png}\hfill\includegraphics[width=0.35\linewidth]{Grey_16-9.pdf} % Side by side funder logos
+\subsection{Funders}
+
+\includegraphics[width=0.55\linewidth]{UKRI_logo.png} % Side by side funder logos
 	
 %----------------------------------------------------------------------------------------
 
