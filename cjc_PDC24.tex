@@ -81,9 +81,9 @@
    \cite{zerroukat2015moist} (see also, \cite{rostami2018improved}).
    All results are presented using Firedrake \cite{FiredrakeUserManual}
    and PETSc \cite{petsc-user-ref}.
-   
+     \vspace{-5mm}
   \section{Scalable monolithic solvers}
-
+  \vspace{-5mm}
   A ``monolithic'' solver treats the full system of coupled variables
   without elimination. To solve the nonlinear algebraic system from an
   implicit Runge-Kutta method we use:
@@ -116,7 +116,7 @@
   compatible finite element discretisation with BDM2-DG1 spaces on
   triangles is used (3 pressure DOFs and 7.5 velocity DOFs per cell), with Crank-Nicholson
   implicit timestepping.
-
+  \vspace{-5mm}
   \begin{center}
   \parbox{6.2cm}{
     \vspace{1cm}
@@ -136,7 +136,7 @@
   iteration counts for the monolithic solver applied to the linear
   rotating shallow water equations on the sphere.
   \end{center}
-
+  \vspace{-5mm}
     \subsection{Solver performance: Nonlinear rotating shallow water equations}
 For the nonlinear rotating shallow water equations, the introduction
 of advection terms degrades $\Delta t$ robustness but mesh independent
@@ -158,11 +158,11 @@ with Crank-Nicholson implicit timestepping.
       mountain'' testcase until 15 days at various resolutions and
       fixed $\Delta x/\Delta t$ ratio, on 16 cores.
   \end{center}
-
+  \vspace{-5mm}
 \subsection{Monolithic solver for thermal rotating shallow water
   equations with moisture}
 
-As an example, we investigated the monolithic solver approach applied
+As an example, we applied the monolithic solver approach
 to the model proposed in \cite{zerroukat2015moist}, which is a shallow
 water model with additional active tracer variables: the potential
 temperature $\theta$, water vapour $q_v$, cloud water $q_c$, and rain
@@ -175,17 +175,24 @@ water $q_r$. The equations take the form
   \DD{}{t}q_{(k)} - S_{q_{(k)}}(q_v, q_c, q_r, \theta, D) & = 0, \quad
   k=v,c,r
 \end{align*}
-where $S_{q_v}$, $S_{q_c}$ and $S_{q_r}$ are reaction terms between
-the species governing condensation/evaporation/raindrop formation and
-their associated latent heat sinks/sources $S_\theta$ (see
-\cite{zerroukat2015moist} for more details). We discretised all the
-tracers in the same DG1 ``pressure'' finite element space.
+where $S_{q_v}$, $S_{q_c}$ and $S_{q_r}$ are reaction terms governing
+condensation/evaporation/raindrop formation and their associated
+latent heat sinks/sources $S_\theta$ (see \cite{zerroukat2015moist}
+for more details). We discretised all the tracers in the same DG1
+``pressure'' finite element space.
 
 The monolithic solver for these equations is constructed exactly as for
 the basic rotating shallow water equations: we use a monolithic multigrid
 preconditioner with ``vertex star'' patches for ASM, now solving coupled
 systems for all 9 variables. 
 
+\begin{center}
+  \includegraphics[height=0.45\linewidth]{vorticity6_30.jpg}
+  \includegraphics[height=0.45\linewidth]{elevation6_30.jpg}
+  \\
+  \includegraphics[height=0.45\linewidth]{vapour6_30.jpg}
+  \includegraphics[height=0.45\linewidth]{cloud6_30.jpg}
+  \\
   \begin{tabular}{cccc}
     Cells & $\Delta t$ & GMRES its/step & Wallclock \\
     \hline
@@ -193,8 +200,17 @@ systems for all 9 variables.
     20480 & 3600s & 16.08 & 1h28m25s \\
     81920 & 1800s & 14.73 & 7h19m53s \\
   \end{tabular} \\
-  \begin{center}
-      \vspace{-8mm} {\bfseries Figure 3}: 
+    \vspace{3mm}
+                {\bfseries Figure 3}: (TOP) Solutions of the thermal
+                shallow water equations with moisture, applied to the
+                modified ``Williamson 5 mountain'' setup of
+                \cite{zerroukat2015moist}. From left to right, and top
+                to bottom, the vorticity, surface elevation, water vapour
+                and cloud are plotted after 30 days.
+                (BOTTOM): Average number of GMRES iterations per timestep,
+                and wallclock times, for these solutions until 30
+                days at various resolution and fixed $\Delta x/\Delta t$
+                ratio, on 16 cores.
   \end{center}
 
 \section{Differential variational inequalities for moisture}
@@ -268,6 +284,18 @@ bottom topography, and $g$ is gravitational acceleration. This is a
 {\bfseries completely time continuous system}, which can be discretised by
 implicit Runge-Kutta methods with the monolithic approach, treating
 the VI constraints from the DAE perspective \cite{kirby2024extending}.
+
+\section{Summary and outlook}
+
+We demonstrated a scalable monolithic solver approach for implicit
+time integration of coupled dynamics and moist species interactions in
+an example rotating shallow water model.  We also presented a
+differential variational inequality formulation of moist species
+interactions. After implicit time discretisation, the system can be
+solved using an VI-adapted Newton method; this is possible using the
+scalable monolithic solver. We will investigate this approach in
+future work, and develop it towards vertical slice and 3D models with
+moisture.
 
 \AtNextBibliography{\small}
 \printbibliography

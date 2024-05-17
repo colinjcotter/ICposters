@@ -174,7 +174,7 @@
 \titleformat
 	{\section} % Section type being modified
 	[block] % Section layout type, can be: hang, block, display, runin, leftmargin, rightmargin, drop, wrap, frame
-	{\raggedright\ImperialSansMedium\iftoggle{a1papersize}{\fontsize{42pt}{52.5pt}}{\fontsize{60pt}{75pt}}\selectfont} % Text formatting of the whole section, i.e. label and title
+	{\raggedright\ImperialSansMedium\iftoggle{a1papersize}{\fontsize{42pt}{52.5pt}}{\fontsize{35pt}{60pt}}\selectfont} % Text formatting of the whole section, i.e. label and title
 	{} % Section label (e.g. number) and its formatting
 	{0pt} % Horizontal space between the section label and title
 	{} % Code before the section title
