@@ -79,7 +79,6 @@
    rotating shallow water equations with moisture as an exploratory
    toy system, in particular the formulation of
    \cite{zerroukat2015moist} (see also, \cite{rostami2018improved}).
-
    All results are presented using Firedrake \cite{FiredrakeUserManual}
    and PETSc \cite{petsc-user-ref}.
    
@@ -107,7 +106,7 @@
   cells sharing a vertex star patch on the horizontal base mesh (see
   \cite{cotter2023compatible}).
 
-  \subsection{Solver performance: Linearisation about state of rest}
+  \subsection{Solver performance: linearisation about current state}
   For the rotating shallow water equations on the sphere linearised
   about a state of rest, the monolithic solver converges at a rate
   that is robust to mesh refinement and changes in $\Delta t$. Figure
@@ -138,7 +137,7 @@
   rotating shallow water equations on the sphere.
   \end{center}
 
-  \subsection{Solver performance: linearisation about current state}
+    \subsection{Solver performance: Nonlinear rotating shallow water equations}
 For the nonlinear rotating shallow water equations, the introduction
 of advection terms degrades $\Delta t$ robustness but mesh independent
 iteration counts are achieved upon maintaining a constant Courant
@@ -148,9 +147,9 @@ with Crank-Nicholson implicit timestepping.
   \begin{tabular}{cccc}
     Cells & $\Delta t$ & GMRES its/step & Wallclock \\
     \hline
-    20480 & 3600s & 18.86 & T \\
-    81920 & 1800s & 18.03 & T \\
-    327680 & 900s & 18.00 & T \\
+    20480 & 3600s & 18.86 & 16m45s \\
+    81920 & 1800s & 18.03 & 1h26m38s \\
+    327680 & 900s & 18.00 & 9h54m50s \\
   \end{tabular} \\
   \begin{center}
       \vspace{-8mm} {\bfseries Figure 2}: Average number of GMRES
@@ -159,18 +158,43 @@ with Crank-Nicholson implicit timestepping.
       mountain'' testcase until 15 days at various resolutions and
       fixed $\Delta x/\Delta t$ ratio, on 16 cores.
   \end{center}
-  
-\columnbreak
+
+\subsection{Monolithic solver for thermal rotating shallow water
+  equations with moisture}
+
+As an example, we investigated the monolithic solver approach applied
+to the model proposed in \cite{zerroukat2015moist}, which is a shallow
+water model with additional active tracer variables: the potential
+temperature $\theta$, water vapour $q_v$, cloud water $q_c$, and rain
+water $q_r$. The equations take the form
+\begin{align*}
+  \DD{u}{t} + fk\times u + g\theta \nabla (D+b) + g\frac{D}{2}\nabla \theta
+  & = 0, \\
+  \pp{D}{t} + \nabla\cdot(uD) & = 0, \\
+  \DD{\theta}{t} - S_\theta(q_v, q_c, \theta, D) & = 0, \\
+  \DD{}{t}q_{(k)} - S_{q_{(k)}}(q_v, q_c, q_r, \theta, D) & = 0, \quad
+  k=v,c,r
+\end{align*}
+where $S_{q_v}$, $S_{q_c}$ and $S_{q_r}$ are reaction terms between
+the species governing condensation/evaporation/raindrop formation and
+their associated latent heat sinks/sources $S_\theta$ (see
+\cite{zerroukat2015moist} for more details). We discretised all the
+tracers in the same DG1 ``pressure'' finite element space.
+
+The monolithic solver for these equations is constructed exactly as for
+the basic rotating shallow water equations: we use a monolithic multigrid
+preconditioner with ``vertex star'' patches for ASM, now solving coupled
+systems for all 9 variables. 
 
 \section{Differential variational inequalities for moisture}
 Moisture parameterisations have saturation constraints on tracers that
 are difficult to incorporate into a differential equation formulation.
 This has previously been done by using Heaviside functions, or by
 spreading the impulse over one timestep, as in
-\cite{zerroukat2015moist,rostami2018improved}. Alternatively, we
-can use the framework of differential variational inequalities (VIs). After
-implicit time discretisation, these become nonlinear complementarity problems
-of the form
+\cite{zerroukat2015moist,rostami2018improved}. Alternatively, we can
+use the framework of differential variational inequalities
+(VIs). After implicit time discretisation, these become nonlinear
+complementarity problems of the form
 \[
 {F}({w}) \geq 0, \quad {w} \geq 0, \quad w_iF(w)_i=0, \, i=1,\ldots,N,
 \]
@@ -185,7 +209,7 @@ $q'\leq 0$. This gives the VI formulation,
 \begin{align*}
 \DD{}{t}(q_{\sat}+q') & \leq 0,  \quad
 q' \leq 0, \qquad \left[ \DD{}{t} = \pp{}{t} + u\cdot \nabla\right] \\
-\DD{}{t}(q_{\sat}+q')q' & = 0, \\
+\DD{}{t}(q_{\sat}+q')q' & = 0, 
 \end{align*}
 i.e. at each point space and time, either the constraint is satisfied,
 or the transport equation holds.
@@ -211,14 +235,14 @@ $q'>0$. Incorporating this gives
   q' \leq 0, \\
   \DD{}{t}q_c + \underbrace{\DD{}{t}(q_{\sat}+q') - \gamma q_c}_{\mbox{condensation}} + \underbrace{\gamma q_c}_{\mbox{evaporation}} & = 0, \\
   \DD{\theta}{t} + L\left(
-  \underbrace{\DD{}{t}(q_{\sat}+q') - \gamma q_c}_{\mbox{condensation}} + \underbrace{\gamma q_c}_{\mbox{evaporation}}\right) & = 0, \\
+  \underbrace{\DD{}{t}(q_{\sat}+q') - \gamma q_c}_{\mbox{condensation}} + \underbrace{\gamma q_c}_{\mbox{evaporation}}\right) & = 0, 
 \end{align*}
 Finally we assume a (fixed) maximum cloud value $q_p$, above which
 cloud is converted to rain, $q_r$. This is achieved using another VI
-for $q_c$, leading to the following, completely time continuous,
-coupled system,
+for $q_c$, leading to the following
+coupled system (following the framework of \cite{zerroukat2015moist} as an example),
 \begin{align*}
-  \DD{u}{t} + fk\times u + b\theta \nabla (D+b) + \frac{D}{2}\nabla \theta
+  \DD{u}{t} + fk\times u + g\theta \nabla (D+b) + g\frac{D}{2}\nabla \theta
   & = 0, \\
   \pp{D}{t} + \nabla\cdot(uD) & = 0, \\
   \DD{\theta}{t} + L\DD{}{t}(q_{\sat}(D,\theta)+q') & = 0, \\
@@ -230,12 +254,10 @@ coupled system,
 where $u$ is the (horizontal) velocity, $f$ is the Coriolis parameter,
 $k$ is the local up direction, $D$ is the layer depth, $b$ is the
 bottom topography, and $g$ is gravitational acceleration. This is a
-completely time continuous system, which can be discretised by
+{\bfseries completely time continuous system}, which can be discretised by
 implicit Runge-Kutta methods with the monolithic approach, treating
 the VI constraints from the DAE perspective \cite{kirby2024extending}.
 
-\columnbreak
-        
 \AtNextBibliography{\small}
 \printbibliography
         
@@ -247,6 +269,7 @@ the VI constraints from the DAE perspective \cite{kirby2024extending}.
 \subsection{Funders}
 
 \includegraphics[width=0.55\linewidth]{UKRI_logo.png} % Side by side funder logos
+\includegraphics[width=0.3\linewidth]{excalibur.png} % Side by side funder logos
 	
 %----------------------------------------------------------------------------------------
 
