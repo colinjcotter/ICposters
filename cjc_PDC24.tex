@@ -283,23 +283,25 @@ where $u$ is the (horizontal) velocity, $f$ is the Coriolis parameter,
 $k$ is the local up direction, $D$ is the layer depth, $b$ is the
 bottom topography, and $g$ is gravitational acceleration. This is a
 {\bfseries completely time continuous system}, which can be discretised by
-implicit Runge-Kutta methods with the monolithic approach, treating
+implicit Runge-Kutta methods, treating
 the VI constraints from the DAE perspective \cite{kirby2024extending}.
 
 \section{Summary and outlook}
 
 We demonstrated a scalable monolithic solver approach for implicit
-time integration of coupled dynamics and moist species interactions in
-an example rotating shallow water model.  We also presented a
-differential variational inequality formulation of moist species
-interactions. After implicit time discretisation, the system can be
-solved using an VI-adapted Newton method; this is possible using the
-scalable monolithic solver. We will investigate this approach in
-future work, and develop it towards vertical slice and 3D models with
-moisture.
+time integration of coupled dynamics and moisture physics in an
+example rotating shallow water model.  We also presented a
+differential variational inequality formulation of moisture
+physics. After implicit time discretisation, the system can be solved
+using an VI-adapted Newton method; this is possible using the scalable
+monolithic solver. We will investigate this approach in future work,
+and develop it towards other formulations, and vertical slice and 3D
+models with moisture.
 
-\AtNextBibliography{\small}
-\printbibliography
+\vspace{-5mm}
+\paragraph{Acknowledgements} CJC is grateful to Nell Hartney and Jemma Shipton for their assistance in setting up the moisture test case.
+
+\AtNextBibliography{\small} \printbibliography
         
 \subsection{Affiliations}
 
