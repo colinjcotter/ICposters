@@ -32,7 +32,7 @@
 %	POSTER INFORMATION
 %----------------------------------------------------------------------------------------
 
-\postertitle{Title\\ Fully implicit moisture-dynamics coupling} % The poster title, can be split across multiple lines manually with \\
+\postertitle{Fully implicit moisture-dynamics coupling} % The poster title, can be split across multiple lines manually with \\
 
 % Contributor/author names, can be split across multiple lines manually with \\
 % Add affiliations using the \affiliation{} command
@@ -185,6 +185,17 @@ The monolithic solver for these equations is constructed exactly as for
 the basic rotating shallow water equations: we use a monolithic multigrid
 preconditioner with ``vertex star'' patches for ASM, now solving coupled
 systems for all 9 variables. 
+
+  \begin{tabular}{cccc}
+    Cells & $\Delta t$ & GMRES its/step & Wallclock \\
+    \hline
+    5120 & 7200s & 17.02 & 21m35s \\
+    20480 & 3600s & 16.08 & 1h28m25s \\
+    81920 & 1800s & 14.73 & 7h19m53s \\
+  \end{tabular} \\
+  \begin{center}
+      \vspace{-8mm} {\bfseries Figure 3}: 
+  \end{center}
 
 \section{Differential variational inequalities for moisture}
 Moisture parameterisations have saturation constraints on tracers that
