@@ -72,7 +72,7 @@
    Instead of building complicated splitting methods between different
    dynamics and physics components, we consider applying implicit
    Runge-Kutta methods to the entire coupled system (moving the
-   complexity to finding a good iterative solver). In NWP this
+   complexity to finding a good iterative solver). In numerical weather prediction, this
    requires reinterpretation of physics processes as terms in a
    differential equation. In particular, this has been made possible
    for some moisture parameterisations. Here we focus on the thermal
@@ -200,18 +200,15 @@ systems for all 9 variables.
     20480 & 3600s & 16.08 & 1h28m25s \\
     81920 & 1800s & 14.73 & 7h19m53s \\
   \end{tabular} \\
-    \vspace{3mm}
-                {\bfseries Figure 3}: (TOP) Solutions of the thermal
-                shallow water equations with moisture, applied to the
-                modified ``Williamson 5 mountain'' setup of
-                \cite{zerroukat2015moist}. From left to right, and top
-                to bottom, the vorticity, surface elevation, water vapour
-                and cloud are plotted after 30 days, all viewed from the South
-                Pole.
-                (BOTTOM): Average number of GMRES iterations per timestep,
-                and wallclock times, for these solutions until 30
-                days at various resolution and fixed $\Delta x/\Delta t$
-                ratio, on 16 cores.
+    \vspace{3mm} {\bfseries Figure 3}: (TOP) Solutions of the thermal
+    shallow water equations with moisture, applied to the modified
+    ``Williamson 5 mountain'' setup of \cite{zerroukat2015moist}, on
+    81920 cells. From left to right, and top to bottom,
+    the vorticity, surface elevation, water vapour and cloud are
+    plotted after 30 days, all viewed from the South Pole.  (BOTTOM):
+    Average number of GMRES iterations per timestep, and wallclock
+    times, for these solutions until 30 days at various resolution and
+    fixed $\Delta x/\Delta t$ ratio, on 16 cores.
   \end{center}
 
 \section{Differential variational inequalities for moisture}
