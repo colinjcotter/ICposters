@@ -188,12 +188,10 @@ preconditioner with ``vertex star'' patches for ASM, now solving coupled
 systems for all 9 variables. 
 
 \begin{center}
-  \includegraphics[height=0.45\linewidth]{vorticity6_30.jpg}
-  \includegraphics[height=0.45\linewidth]{elevation6_30.jpg}
-  \\
-  \includegraphics[height=0.45\linewidth]{vapour6_30.jpg}
-  \includegraphics[height=0.45\linewidth]{cloud6_30.jpg}
-  \\
+  %\includegraphics[height=0.45\linewidth]{vorticity6_30.jpg}
+  %\includegraphics[height=0.45\linewidth]{elevation6_30.jpg}\\
+  %\includegraphics[height=0.45\linewidth]{vapour6_30.jpg}
+  %\includegraphics[height=0.45\linewidth]{cloud6_30.jpg}\\
   \begin{tabular}{cccc}
     Cells & $\Delta t$ & GMRES its/step & Wallclock \\
     \hline
@@ -223,7 +221,7 @@ use the framework of differential variational inequalities
 (VIs). After implicit time discretisation, these become nonlinear
 complementarity problems of the form
 \[
-{F}({w}) \geq 0, \quad {w} \geq 0, \quad w_iF(w)_i=0, \, i=1,\ldots,N,
+{F}({w}) \leq 0, \quad {w} \leq 0, \quad w_iF(w)_i=0, \, i=1,\ldots,N,
 \]
 for $F:\mathbb{R}^N\to \mathbb{R}^N$, $w\in \mathbb{R}^N$, which can
 be solved using VI-adapted Newton algorithms \cite{bueler2020petsc},
@@ -253,8 +251,8 @@ We can also use this to set the latent heat release,
 where $\theta$ is potential temperature, and $L$ is a heat release constant.
 
 
-Cloud evaporates back into vapour at rate $\gamma q_v$, provided that
-$q'>0$. Incorporating this gives
+Cloud evaporates back into vapour at rate $\gamma q_c$, provided that
+$q'<0$. Incorporating this gives
 \begin{align*}
   \DD{}{t}(q_{\sat}+q') - \gamma q_c & \leq 0, \quad
   q' \leq 0, \\
