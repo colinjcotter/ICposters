@@ -175,7 +175,7 @@ The equations take the form
   \pp{\rho}{t} + \nabla\cdot(u\rho) & = 0, \\
   \DD{\theta}{t} - S_\theta(q_v, q_c, \theta, \rho) & = 0, \\
   \DD{}{t}q_{(k)} - S_{q_{(k)}}(q_v, q_c, q_r, \theta, \rho) & = 0, \quad
-  k=v,c,r
+  k=v,c,r,
 \end{align*}
 where $u$ is the (horizontal) velocity, $f$ is the Coriolis parameter,
 $k$ is the local up direction, $\rho$ is the layer depth, $b$ is the
@@ -188,7 +188,7 @@ for more details).
 The monolithic solver for these equations is constructed exactly as for
 the basic rotating shallow water equations: we use a monolithic multigrid
 preconditioner with ``vertex star'' patches for ASM, now solving coupled
-systems for all 9 variables. 
+systems for all six variables. 
 
 \begin{center}
   \includegraphics[height=0.45\linewidth]{vorticity6_30.jpg}
@@ -230,6 +230,7 @@ for $F:\mathbb{R}^N\to \mathbb{R}^N$, $w\in \mathbb{R}^N$, which can
 be solved using VI-adapted Newton algorithms \cite{bueler2020petsc},
 which just require a suitable Jacobian solver (such as our monolithic
 one).
+
 For water vapour $q_v$ there is a maximum saturation value $q_{\sat}$
 (depending on temperature etc.) so we write $q_v=q_{\sat}+q'$ with
 $q'\leq 0$. This gives the VI formulation,
@@ -240,16 +241,16 @@ q' \leq 0, \qquad \left[ \DD{}{t} = \pp{}{t} + u\cdot \nabla\right] \\
 \end{align*}
 i.e. at each point space and time, either the constraint is satisfied,
 or the transport equation holds.
-The condensation flux of vapour $q_v$ into cloud $q_c$ is $F$, where
+The rate of condensation of vapour $q_v$ into cloud $q_c$ is $R$, where
 \[
-\DD{}{t}(q_{\sat}+q') = F, \quad
-\DD{}{t}q_c = -F \implies
+\DD{}{t}(q_{\sat}+q') = -R, \quad
+\DD{}{t}q_c = R \implies
 \DD{}{t}q_c = -\DD{}{t}(q_{\sat}+q').
 \]
-\emph{\bfseries The flux $F$ is eliminated and we never need to calculate it.}
+\emph{\bfseries The rate $R$ is eliminated and we never need to calculate it.}
 We can also use this to set the latent heat release,
 \[
-\DD{}{t}\theta = -L\DD{}{t}(q_{\sat}+q'),
+\DD{}{t}\theta = LR = -L\DD{}{t}(q_{\sat}+q'),
 \]
 where $\theta$ is potential temperature, and $L$ is a heat release constant.
 
@@ -261,12 +262,12 @@ $q'<0$. Incorporating this gives
   q' \leq 0, \\
   \DD{}{t}q_c + \underbrace{\DD{}{t}(q_{\sat}+q') - \gamma q_c}_{\mbox{condensation}} + \underbrace{\gamma q_c}_{\mbox{evaporation}} & = 0, \\
   \DD{\theta}{t} + L\left(
-  \underbrace{\DD{}{t}(q_{\sat}+q') - \gamma q_c}_{\mbox{condensation}} + \underbrace{\gamma q_c}_{\mbox{evaporation}}\right) & = 0, 
+  \underbrace{\DD{}{t}(q_{\sat}+q') - \gamma q_c}_{\mbox{condensation}} + \underbrace{\gamma q_c}_{\mbox{evaporation}}\right) & = 0.
 \end{align*}
 Finally we assume a (fixed) maximum cloud value $q_p$, above which
 cloud is converted to rain, $q_r$. This is achieved using another VI
-for $q_c$, leading to the following
-coupled system (following the framework of \cite{zerroukat2015moist} as an example),
+for $q_c$. Putting this all together with the velocity and mass
+equations produces the following coupled system,
 \begin{align*}
   \DD{u}{t} + fk\times u + g\theta \nabla (\rho+b) + g\frac{\rho}{2}\nabla \theta
   & = 0, \\
@@ -275,7 +276,7 @@ coupled system (following the framework of \cite{zerroukat2015moist} as an examp
   \DD{}{t}(q_{\sat}(\rho,\theta)+q') - \gamma q_c & \leq 0, \quad q'\leq 0 \\
   \DD{}{t}q_c + \DD{}{t}(q_{\sat}(\rho,\theta)+q') & \leq 0, \quad
   q_c \leq q_p, \\
-  \DD{q_r}{t} + \left(\DD{}{t}q_c + \DD{}{t}(q_{\sat}(\rho,\theta)+q')\right) & = 0,
+  \DD{q_r}{t} + \left(\DD{}{t}q_c + \DD{}{t}(q_{\sat}(\rho,\theta)+q')\right) & = 0.
 \end{align*}
 This is a
 {\bfseries completely time continuous system}, which can be discretised by
